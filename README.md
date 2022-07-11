@@ -1,5 +1,4 @@
 # Secure Pipelines Demo
-este es un test
 Sample spring application with Jenkins pipeline script to demonstrate secure pipelines
 
 ## Pre Requesites
