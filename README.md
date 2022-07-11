@@ -1,5 +1,5 @@
 # Secure Pipelines Demo
-22Sample spring application with Jenkins pipeline script to demonstrate secure pipelines
+Sample spring application with Jenkins pipeline script to demonstrate secure pipelines
 
 ## Pre Requesites
 
