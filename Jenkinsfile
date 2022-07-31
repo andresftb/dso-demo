@@ -1,4 +1,7 @@
 pipeline {
+  environment {
+    ARGO_SERVER = '34.68.245.93:32100'
+  }
   agent {
     kubernetes {
       yamlFile 'build-agent.yaml'
@@ -18,45 +21,45 @@ pipeline {
         }
       }
     }
-    stage('Static Analysis') {
-      parallel {
-        stage('Unit Tests') {
-          steps {
-            container('maven') {
-              sh 'mvn test'
-            }
-          }
-        }
-        stage('SCA') {
-          steps {
-            container('maven') {
-              catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                sh 'mvn org.owasp:dependency-check-maven:check'
-              }
-            }
-          }
-          post {
-            always {
-              archiveArtifacts allowEmptyArchive: true,artifacts: 'target/dependency-check-report.html', fingerprint: true, onlyIfSuccessful: true
-              // dependencyCheckPublisher pattern: 'report.xml'
-            }
-          }
-        }
-        stage('OSS License Checker') {
-          steps {
-            container('licensefinder') {
-              sh 'ls -al'
-              sh '''#!/bin/bash --login
-                    /bin/bash --login
-                    rvm use default
-                    gem install license_finder
-                    license_finder
-                    '''
-            }
-          }
-        }
-      }
-    }
+    // stage('Static Analysis') {
+    //   parallel {
+    //     stage('Unit Tests') {
+    //       steps {
+    //         container('maven') {
+    //           sh 'mvn test'
+    //         }
+    //       }
+    //     }
+    //     stage('SCA') {
+    //       steps {
+    //         container('maven') {
+    //           catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+    //             sh 'mvn org.owasp:dependency-check-maven:check'
+    //           }
+    //         }
+    //       }
+    //       post {
+    //         always {
+    //           archiveArtifacts allowEmptyArchive: true,artifacts: 'target/dependency-check-report.html', fingerprint: true, onlyIfSuccessful: true
+    //           // dependencyCheckPublisher pattern: 'report.xml'
+    //         }
+    //       }
+    //     }
+    //     stage('OSS License Checker') {
+    //       steps {
+    //         container('licensefinder') {
+    //           sh 'ls -al'
+    //           sh '''#!/bin/bash --login
+    //                 /bin/bash --login
+    //                 rvm use default
+    //                 gem install license_finder
+    //                 license_finder
+    //                 '''
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
     stage('SAST') {
       steps {
         container('slscan') {
@@ -108,9 +111,14 @@ pipeline {
     }
 
     stage('Deploy to Dev') {
+      environment {
+        AUTH_TOKEN = credentials('argocd-jenkins-deployer-token')
+      }
       steps {
-        // TODO
-        sh "echo done"
+        container('docker-tools') {
+          sh 'docker run -t schoolofdevops/argocd-cli argocd app sync dso-demo --insecure --server $ARGO_SERVER --auth-token $AUTH_TOKEN'
+          sh 'docker run -t schoolofdevops/argocd-cli argocd app wait dso-demo --health --timeout 300 --insecure --server $ARGO_SERVER --auth-token $AUTH_TOKEN'
+        }
       }
     }
   }
