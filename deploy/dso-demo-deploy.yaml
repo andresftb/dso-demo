@@ -5,6 +5,8 @@ metadata:
   labels:
     app: dso-demo
   name: dso-demo
+  annotations:
+    seccomp.security.alpha.kubernetes.io/pod: "runtime/default"
 spec:
   replicas: 1
   selector:
@@ -31,8 +33,6 @@ spec:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 1000
-          seccompProfile:
-            type: RuntimeDefault
         resources:
           requests:
             cpu: "50m"
