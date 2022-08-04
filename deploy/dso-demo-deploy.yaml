@@ -32,7 +32,7 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-          runAsUser: 1000
+          runAsUser: 11000
         resources:
           requests:
             cpu: "50m"
